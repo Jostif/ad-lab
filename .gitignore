@@ -1,0 +1,9 @@
+loot/
+*.ccache
+*.kirbi
+*.pfx
+*.hash
+config.yaml
+__pycache__/
+*.pyc
+.venv/

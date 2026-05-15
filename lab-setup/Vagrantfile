@@ -1,0 +1,99 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# ad-lab Vagrantfile — J0stif
+# Spins up a minimal 2-machine AD lab:
+#   DC01  — Windows Server 2022, Domain Controller, ADCS, RODC
+#   WS01  — Windows Server 2022, domain-joined workstation
+#
+# Requirements:
+#   vagrant >= 2.3.0
+#   VirtualBox >= 7.0  OR  VMware Workstation
+#   vagrant-reload plugin: vagrant plugin install vagrant-reload
+#
+# Usage:
+#   vagrant up              # provision full lab
+#   vagrant up DC01         # provision DC only
+#   vagrant snapshot save DC01 baseline
+#   vagrant snapshot restore DC01 baseline
+
+Vagrant.configure("2") do |config|
+
+  # -------------------------------------------------------------------
+  # DC01 — Domain Controller
+  # -------------------------------------------------------------------
+  config.vm.define "DC01" do |dc|
+    dc.vm.box      = "StefanScherer/windows_2022"
+    dc.vm.hostname = "DC01"
+
+    dc.vm.network "private_network",
+      ip: "192.168.56.10",
+      virtualbox__intnet: "adlab"
+
+    dc.vm.network "forwarded_port",
+      guest: 5985, host: 55985,
+      host_ip: "127.0.0.1",
+      id: "winrm"
+
+    dc.vm.provider "virtualbox" do |vb|
+      vb.name   = "adlab-DC01"
+      vb.memory = 4096
+      vb.cpus   = 2
+      vb.gui    = false
+      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    end
+
+    # Provision: promote to DC, configure AD, ADCS, vulnerable templates
+    dc.vm.provision "shell", path: "provision/01_promote_dc.ps1",
+      privileged: true
+    dc.vm.provision :reload
+    dc.vm.provision "shell", path: "provision/02_configure_ad.ps1",
+      privileged: true
+    dc.vm.provision "shell", path: "provision/03_setup_adcs.ps1",
+      privileged: true
+    dc.vm.provision "shell", path: "provision/04_vulnerable_configs.ps1",
+      privileged: true
+  end
+
+  # -------------------------------------------------------------------
+  # WS01 — Domain-joined workstation
+  # -------------------------------------------------------------------
+  config.vm.define "WS01" do |ws|
+    ws.vm.box      = "StefanScherer/windows_2022"
+    ws.vm.hostname = "WS01"
+
+    ws.vm.network "private_network",
+      ip: "192.168.56.11",
+      virtualbox__intnet: "adlab"
+
+    ws.vm.provider "virtualbox" do |vb|
+      vb.name   = "adlab-WS01"
+      vb.memory = 2048
+      vb.cpus   = 2
+      vb.gui    = false
+    end
+
+    ws.vm.provision "shell", path: "provision/05_join_domain.ps1",
+      privileged: true
+    ws.vm.provision :reload
+  end
+
+  # -------------------------------------------------------------------
+  # Attacker (optional — Kali)
+  # -------------------------------------------------------------------
+  config.vm.define "KALI", autostart: false do |kali|
+    kali.vm.box = "kalilinux/rolling"
+    kali.vm.network "private_network",
+      ip: "192.168.56.100",
+      virtualbox__intnet: "adlab"
+
+    kali.vm.provider "virtualbox" do |vb|
+      vb.name   = "adlab-KALI"
+      vb.memory = 4096
+      vb.cpus   = 2
+    end
+
+    kali.vm.provision "shell", path: "provision/06_kali_tools.sh"
+  end
+
+end

@@ -1,0 +1,169 @@
+{
+  "queries": [
+    {
+      "name": "[J0stif] Kerberoastable users (enabled, not krbtgt)",
+      "category": "Kerberoasting",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User) WHERE u.hasspn = true AND u.enabled = true AND NOT u.name STARTS WITH 'KRBTGT' RETURN u",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] Kerberoastable users with path to DA",
+      "category": "Kerberoasting",
+      "queryList": [
+        {
+          "final": false,
+          "query": "MATCH (u:User {hasspn:true, enabled:true}) RETURN u.name, u.domain ORDER BY u.name",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] AS-REP Roastable users",
+      "category": "AS-REP Roasting",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {dontreqpreauth:true, enabled:true}) RETURN u",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] GenericWrite targets (shadow creds)",
+      "category": "Shadow Credentials",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a)-[:GenericWrite]->(b:User) WHERE a.enabled = true RETURN a, b",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] GenericWrite on computers (RBCD)",
+      "category": "RBCD",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a)-[:GenericWrite]->(c:Computer) WHERE a.enabled = true RETURN a, c",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] All write edges to high-value targets",
+      "category": "ACL Abuse",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a)-[r:GenericWrite|GenericAll|WriteDacl|WriteOwner|Owns]->(b) WHERE b.highvalue = true AND a.enabled = true RETURN a, r, b",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] DCSync rights",
+      "category": "DCSync",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a)-[r:DCSync|GetChanges|GetChangesAll]->(d:Domain) WHERE a.enabled = true RETURN a, r, d",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] Allowed RODC Password Replication Group",
+      "category": "RODC / KeyList",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u)-[:MemberOf*1..]->(g:Group) WHERE g.name CONTAINS 'ALLOWED RODC PASSWORD' RETURN u, g",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] High-value users NOT in Denied RODC PRP (KeyList targets)",
+      "category": "RODC / KeyList",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled:true}) WHERE u.highvalue = true AND NOT (u)-[:MemberOf*1..]->(:Group) WHERE toString(toLower(g.name)) CONTAINS 'denied rodc' RETURN u",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] Shortest path from owned to DA",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (owned {owned:true}), (da:Group) WHERE da.name STARTS WITH 'DOMAIN ADMINS' MATCH p = shortestPath((owned)-[*1..10]->(da)) WHERE owned <> da RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] AdminSDHolder protected users",
+      "category": "Misc",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {admincount:true, enabled:true}) RETURN u",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] DA sessions on computers (lateral movement)",
+      "category": "Misc",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (da:User)-[:MemberOf*1..]->(g:Group) WHERE g.name STARTS WITH 'DOMAIN ADMINS' MATCH (da)-[:HasSession]->(c:Computer) RETURN da, c",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] Cross-domain trust relationships",
+      "category": "Trusts",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (d1:Domain)-[r:TrustedBy|HasTrust]->(d2:Domain) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] Users with SID history to high-value groups",
+      "category": "Misc",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:HasSIDHistory]->(g:Group) WHERE g.highvalue = true RETURN u, g",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "[J0stif] RODC computer accounts",
+      "category": "RODC / KeyList",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer {isrodc:true}) RETURN c",
+          "allowCollapse": false
+        }
+      ]
+    }
+  ]
+}
