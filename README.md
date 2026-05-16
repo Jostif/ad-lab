@@ -144,28 +144,77 @@ Queries included:
 
 ## Lab setup
 
-### Requirements
+### Prerequisites
+
+**1. Vagrant** — https://developer.hashicorp.com/vagrant/downloads
+```bash
+# Verify
+vagrant --version   # >= 2.3.0
 ```
-vagrant >= 2.3.0
-VirtualBox >= 7.0
-vagrant-reload plugin
-16GB RAM recommended
+
+**2. Hypervisor — choose one:**
+
+| Hypervisor | Download | Notes |
+|---|---|---|
+| VirtualBox | https://virtualbox.org/wiki/Downloads | Free, easiest setup |
+| VMware Workstation Pro | https://broadcom.com/products/desktop-hypervisors | Free since 2024 |
+| VMware Fusion (macOS) | https://blogs.vmware.com/teamfusion/2024/05/fusion-pro-now-available-free-for-personal-use.html | Free for personal use |
+| libvirt / KVM (Linux) | `sudo apt install vagrant-libvirt` | Best for Linux hosts |
+
+**3. Vagrant provider plugin** — install the one matching your hypervisor:
+```bash
+# VirtualBox (default — no plugin needed)
+vagrant plugin install vagrant-reload
+
+# VMware
+vagrant plugin install vagrant-vmware-desktop
+vagrant plugin install vagrant-reload
+
+# libvirt / KVM
+vagrant plugin install vagrant-libvirt
+vagrant plugin install vagrant-reload
 ```
+
+**4. Resources required:**
+
+| Resource | Minimum | Recommended |
+|---|---|---|
+| RAM | 8GB free | 16GB free |
+| Disk | 60GB free | 90GB free |
+| CPU | 4 cores | 6+ cores |
+
+> Windows Server boxes (~9GB each) are downloaded automatically on first `vagrant up` — no manual ISO or license needed. Microsoft provides free 180-day evaluation builds.
+
+---
+
+### Provider configuration
+
+The Vagrantfile defaults to **VirtualBox**. To use a different hypervisor, either pass the provider flag or set a default:
+
+```bash
+# VMware
+vagrant up --provider=vmware_desktop
+
+# libvirt / KVM
+vagrant up --provider=libvirt
+
+# Set a permanent default (optional)
+export VAGRANT_DEFAULT_PROVIDER=vmware_desktop
+```
+
+---
 
 ### Spin up the lab
 ```bash
 cd lab-setup
 
-# Install reload plugin (once)
-vagrant plugin install vagrant-reload
-
-# Start full lab (DC01 + WS01)
+# Start full lab (DC01 + WS01) — ~20 min first run
 vagrant up
 
 # DC only (faster for testing)
 vagrant up DC01
 
-# Add Kali attacker
+# Add Kali attacker VM (optional — skip if using existing Kali)
 vagrant up KALI
 ```
 
@@ -220,6 +269,6 @@ vagrant snapshot restore WS01 baseline
 ## Author
 
 **J0stif** — penetration tester, bug bounty hunter
-OSCP (in progress) · HTB CPTS (in progress) · HTB CWES (in progress)
+PNPT · PWPA · OSCP (in progress) · HTB CPTS (in progress) · HTB CWES (in progress)
 
 [HTB Profile](https://app.hackthebox.com/profile/) · [Writeups & Notes](https://j0stif.github.io)
