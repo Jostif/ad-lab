@@ -269,6 +269,6 @@ vagrant snapshot restore WS01 baseline
 ## Author
 
 **J0stif** — penetration tester, bug bounty hunter
-PNPT · PWPA · OSCP (in progress) · HTB CPTS (in progress) · HTB CWES (in progress)
+PNPT · PWPA · CEH · OSCP (in progress) · HTB CPTS (in progress) · HTB CWES (in progress)
 
-[HTB Profile](https://app.hackthebox.com/profile/) · [Writeups & Notes](https://j0stif.github.io)
+[HTB Profile](https://app.hackthebox.com/users/2209690) · [Writeups & Notes](https://j0stif.github.io) · [X social](https://x.com/J0stif)
